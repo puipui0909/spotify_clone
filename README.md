@@ -8,7 +8,7 @@ Giao diện màn hình thư viện
 
 ## Ảnh giao diện hiện tại
 
-[spotify_clone.iml](spotify_clone.iml)
+![Screenshot_20250728_202751.png](test/Screenshot_20250728_202751.png)
 
 ## Hướng dẫn chạy app
 

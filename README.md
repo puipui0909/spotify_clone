@@ -1,16 +1,25 @@
 # spotify_clone
 
-A new Flutter project.
+clone ứng dụng spotify
 
-## Getting Started
+## Trạng thái dự án
 
-This project is a starting point for a Flutter application.
+Giao diện màn hình thư viện
 
-A few resources to get you started if this is your first Flutter project:
+## Ảnh giao diện hiện tại
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+[spotify_clone.iml](spotify_clone.iml)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Hướng dẫn chạy app
+
+bash
+    git clone https://github.com/puipui0909/spotify_clone.git
+    cd spotify_clone
+    flutter pub get
+    flutter run
+
+## Cấu trúc thư mục
+lib/
+    main.dart
+    Screens/
+        library.dart

@@ -140,8 +140,6 @@ class LibraryScreen extends StatelessWidget{
           ]
       ),
     );
-    // TODO: implement build
-    throw UnimplementedError();
   }
 
 }

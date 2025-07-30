@@ -4,8 +4,8 @@ clone ứng dụng spotify
 
 ## Trạng thái dự án
 
-Giao diện màn hình thư viện, giao diện get started khi lần đầu mở ứng dụng, 
-thêm cài đặt giao diện sáng tôi nhưng chưa điều chỉnh được
+Giao diện màn hình thư viện, <br>
+Giao diện get started khi lần đầu mở ứng dụng, thêm cài đặt giao diện sáng tôi nhưng chưa điều chỉnh được
 
 ## Ảnh giao diện hiện tại
 
@@ -20,10 +20,10 @@ bash
     flutter run
 
 ## Cấu trúc thư mục
-lib/
-    main.dart
-    Screens/
-        library.dart
-    theme/
-        theme.dart
-        theme_notifier.dart
+lib/ <br>
+    main.dart <br>
+    Screens/ <br>
+        library.dart <br>
+    theme/ <br>
+        theme.dart<br>
+        theme_notifier.dart<br>

@@ -21,9 +21,9 @@ bash
 
 ## Cấu trúc thư mục
 lib/ <br>
-    main.dart <br>
-    Screens/ <br>
-        library.dart <br>
-    theme/ <br>
-        theme.dart<br>
-        theme_notifier.dart<br>
+   >main.dart <br>
+   >Screens/ <br>
+        >>library.dart <br>
+   >theme/ <br>
+        >theme.dart<br>
+        >theme_notifier.dart<br>

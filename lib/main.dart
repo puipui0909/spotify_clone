@@ -11,6 +11,7 @@ import 'package:firebase_core/firebase_core.dart';
 
 
 void main() async {
+  //connect to firebase
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(

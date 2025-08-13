@@ -1,4 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterScreen extends StatefulWidget{
   const RegisterScreen({Key? key}) : super(key: key);
@@ -10,6 +13,7 @@ class RegisterScreen extends StatefulWidget{
 class _RegisterScreenState extends State<RegisterScreen>{
   final _formkey = GlobalKey<FormState>();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -23,6 +27,82 @@ class _RegisterScreenState extends State<RegisterScreen>{
     super.dispose();
   }
 
+  Future<void> _createAccount() async{
+    if(_formkey.currentState!.validate()){
+      setState(() => _isLoading = true);
+
+      try{
+        //create account on firebase
+        UserCredential userCredential =
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+        );
+        if (userCredential.user != null) {
+          await userCredential.user!.updateDisplayName(
+              _nameController.text.trim());
+        }
+        // Save data in Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set({
+          'fullName': _nameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tạo tài khoản thành công')),
+        );
+        //Go to HomeScreen
+        Navigator.pushReplacementNamed(context, '/home');
+      } on FirebaseAuthException catch (e) {
+        String message = 'Xảy ra lỗi';
+        if(e.code == 'email-already-in-use'){
+          message = 'email đã được sử dụng';
+        } else if (e.code == 'invalid-email'){
+          message = 'email không hợp lệ';
+        } else if (e.code == 'weak-password'){
+          message = 'mật khẩu quá yếu';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+        );
+      } finally{
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    required String? Function(String?) validator,
+    bool isPassword = false,
+  }){
+    return SizedBox(
+      width: MediaQuery.of(context).size.width * 0.8,
+      child: TextFormField(
+        controller: controller,
+        obscureText: isPassword ? _obscurePassword : false,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          suffixIcon: isPassword ? IconButton(
+              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              icon: Icon(
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+              ),
+          ) : null,
+        ),
+        validator: validator,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,9 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen>{
               Align(
                 alignment: Alignment.centerLeft,
                 child: IconButton(
-                  onPressed: (){
-
-                  },
+                  onPressed: () => Navigator.pop(context),
                   icon: Icon(Icons.arrow_back),),
               ),
               Align(
@@ -63,53 +141,45 @@ class _RegisterScreenState extends State<RegisterScreen>{
                     padding: const EdgeInsets.only(top: 15.0, bottom: 10),
                     child: Text('Register', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),),
                   ),
-                  Container(
-                    height: 80,
-                    width: 334,
-                    child: TextFormField(
+                  _buildTextField(
+                      label: 'Full Name',
                       controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: 'Full Name',
-                        border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                    ),
+                      validator: (value) {
+                        if(value == null || value.isEmpty){
+                          return 'Please enter your full name';
+                        }
+                        return null;
+                      }
                   ),
-                ),
-              ),
-              Container(
-                  height: 80,
-                  width: 334,
-                  child: TextFormField(
+                  _buildTextField(
+                      label: 'Enter Email',
                       controller: _emailController,
-                      decoration: InputDecoration(
-                          labelText: 'Enter Email',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          )))),
-              Container(
-                  height: 80,
-                  width: 334,
-                  child: TextFormField(
+                      validator: (value){
+                        if(value == null || value.isEmpty){
+                          return 'Please enter your email';
+                        }
+                        if(!value.contains('@') || !value.contains('.')){
+                          return 'Invalid email';
+                        }
+                        return null;
+                      },
+                  ),
+                  _buildTextField(
+                      label: 'Password',
                       controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                          labelText: 'Password',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                              ),
-                              onPressed: (){
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                          )
-                      ))),
+                      isPassword: true,
+                      validator:(value){
+                        if(value == null || value.isEmpty){
+                          return 'Please enter your password';
+                        }
+                        if(value.length < 6){
+                          return 'Your password needs at least 6 characters';
+                        }
+                        return null;
+                      }
+                  ),
               TextButton(
-                  onPressed: (){},
+                  onPressed:_isLoading ? null : _createAccount,
                   style: TextButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
@@ -118,7 +188,13 @@ class _RegisterScreenState extends State<RegisterScreen>{
                           borderRadius: BorderRadius.circular(25)
                       )
                   ),
-                  child: Text('Create Account', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),)),
+                  child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                      'Create Account',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)
+                    )
+              ),
               Row(
                 children: <Widget>[
                   SizedBox(width: 40,),
@@ -168,7 +244,28 @@ class _RegisterScreenState extends State<RegisterScreen>{
                   )
                 ],
               ),
-              Text('Do You Have An Account? Sign In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),)
+              RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.bodyMedium!.color,
+                    ),
+                    children:[
+                      const TextSpan(text: 'Do You Have An Account?'),
+                      TextSpan(
+                        text: ' Sign In',
+                        style: const TextStyle(
+                          color: Colors.green
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = (){
+                            Navigator.pushNamed(context, '/signin');
+                          }
+                      )
+                    ]
+                  )),
+
             ],
           ),
         )

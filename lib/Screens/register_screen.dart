@@ -3,273 +3,232 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class RegisterScreen extends StatefulWidget{
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen>{
-  final _formkey = GlobalKey<FormState>();
-  bool _obscurePassword = true;
-  bool _isLoading = false;
+class _RegisterScreenState extends State<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
 
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
-  void dispose(){
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
+  void dispose() {
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _createAccount() async{
-    if(_formkey.currentState!.validate()){
-      setState(() => _isLoading = true);
+  Future<void> _createAccount() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      try{
-        //create account on firebase
-        UserCredential userCredential =
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
-            email: _emailController.text.trim(),
-            password: _passwordController.text.trim(),
-        );
-        if (userCredential.user != null) {
-          await userCredential.user!.updateDisplayName(
-              _nameController.text.trim());
-        }
-        // Save data in Firestore
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userCredential.user!.uid)
-            .set({
-          'fullName': _nameController.text.trim(),
-          'email': _emailController.text.trim(),
+    setState(() => _isLoading = true);
+    try {
+      final userCred = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+        email: _emailCtrl.text.trim(),
+        password: _passCtrl.text.trim(),
+      );
+
+      final user = userCred.user;
+      if (user != null) {
+        await user.updateDisplayName(_nameCtrl.text.trim());
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'uid': user.uid,
+          'fullName': _nameCtrl.text.trim(),
+          'email': _emailCtrl.text.trim(),
           'createdAt': FieldValue.serverTimestamp(),
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tạo tài khoản thành công')),
+          const SnackBar(content: Text('Tạo tài khoản thành công ✅')),
         );
-        //Go to HomeScreen
         Navigator.pushReplacementNamed(context, '/home');
-      } on FirebaseAuthException catch (e) {
-        String message = 'Xảy ra lỗi';
-        if(e.code == 'email-already-in-use'){
-          message = 'email đã được sử dụng';
-        } else if (e.code == 'invalid-email'){
-          message = 'email không hợp lệ';
-        } else if (e.code == 'weak-password'){
-          message = 'mật khẩu quá yếu';
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-        );
-      } finally{
-        setState(() => _isLoading = false);
       }
+    } on FirebaseAuthException catch (e) {
+      final msg = switch (e.code) {
+        'email-already-in-use' => 'Email đã được sử dụng',
+        'invalid-email' => 'Email không hợp lệ',
+        'weak-password' => 'Mật khẩu quá yếu',
+        _ => 'Xảy ra lỗi'
+      };
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
-  Widget _buildTextField({
+  // ✅ Widget chung cho TextField
+  Widget _field({
     required String label,
-    required TextEditingController controller,
+    required TextEditingController ctrl,
     required String? Function(String?) validator,
     bool isPassword = false,
-  }){
-    return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.8,
-      child: TextFormField(
-        controller: controller,
-        obscureText: isPassword ? _obscurePassword : false,
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          suffixIcon: isPassword ? IconButton(
-              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+  }) =>
+      SizedBox(
+        width: MediaQuery.of(context).size.width * 0.85,
+        child: TextFormField(
+          controller: ctrl,
+          obscureText: isPassword ? _obscurePassword : false,
+          decoration: InputDecoration(
+            labelText: label,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+            suffixIcon: isPassword
+                ? IconButton(
               icon: Icon(
-                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
-              ),
-          ) : null,
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility),
+              onPressed: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
+            )
+                : null,
+          ),
+          validator: validator,
         ),
-        validator: validator,
-      ),
-    );
+      );
+
+  // ✅ Validator
+  String? _validate(String? v, String field) {
+    if (v == null || v.isEmpty) return 'Please enter your $field';
+    if (field == 'email' && (!v.contains('@') || !v.contains('.'))) {
+      return 'Invalid email';
+    }
+    if (field == 'password' && v.length < 6) {
+      return 'Your password needs at least 6 characters';
+    }
+    return null;
   }
+
+  // ✅ Nút social login
+  Widget _socialButton(String path) => ElevatedButton(
+    style: ElevatedButton.styleFrom(
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      shadowColor: Colors.transparent,
+    ),
+    onPressed: () {},
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Image.asset(path, height: 40, width: 40, fit: BoxFit.cover),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          elevation: 0,
-          title: Stack(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: Icon(Icons.arrow_back),),
-              ),
-              Align(
-                alignment: Alignment.center,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Image.asset(
-                    'assets/images/loading.png',
-                    height: 33,
-                    width: 108,
-                  ),
-                ),
-              )
-            ],
-          ),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => Navigator.pop(context),
+            ),
+            const Spacer(),
+            Image.asset('assets/images/loading.png', height: 33, width: 108),
+            const Spacer(flex: 2),
+          ],
         ),
-        body: Center(
-          child: SingleChildScrollView(
-            child: Form(
-              key: _formkey,
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15.0, bottom: 10),
-                    child: Text('Register', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),),
-                  ),
-                  _buildTextField(
-                      label: 'Full Name',
-                      controller: _nameController,
-                      validator: (value) {
-                        if(value == null || value.isEmpty){
-                          return 'Please enter your full name';
-                        }
-                        return null;
-                      }
-                  ),
-                  _buildTextField(
-                      label: 'Enter Email',
-                      controller: _emailController,
-                      validator: (value){
-                        if(value == null || value.isEmpty){
-                          return 'Please enter your email';
-                        }
-                        if(!value.contains('@') || !value.contains('.')){
-                          return 'Invalid email';
-                        }
-                        return null;
-                      },
-                  ),
-                  _buildTextField(
-                      label: 'Password',
-                      controller: _passwordController,
-                      isPassword: true,
-                      validator:(value){
-                        if(value == null || value.isEmpty){
-                          return 'Please enter your password';
-                        }
-                        if(value.length < 6){
-                          return 'Your password needs at least 6 characters';
-                        }
-                        return null;
-                      }
-                  ),
-              TextButton(
-                  onPressed:_isLoading ? null : _createAccount,
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                const Text('Register',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30)),
+                const SizedBox(height: 20),
+
+                _field(
+                  label: 'Full Name',
+                  ctrl: _nameCtrl,
+                  validator: (v) => _validate(v, 'full name'),
+                ),
+                const SizedBox(height: 12),
+
+                _field(
+                  label: 'Enter Email',
+                  ctrl: _emailCtrl,
+                  validator: (v) => _validate(v, 'email'),
+                ),
+                const SizedBox(height: 12),
+
+                _field(
+                  label: 'Password',
+                  ctrl: _passCtrl,
+                  isPassword: true,
+                  validator: (v) => _validate(v, 'password'),
+                ),
+                const SizedBox(height: 20),
+
+                TextButton(
+                  onPressed: _isLoading ? null : _createAccount,
                   style: TextButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      minimumSize: Size(332, 80),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25)
-                      )
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(332, 60),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25)),
                   ),
                   child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                      'Create Account',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)
-                    )
-              ),
-              Row(
-                children: <Widget>[
-                  SizedBox(width: 40,),
-                  const Expanded(
-                    child: Divider(thickness: 1),
-                  ),
-                  Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text('or',)),
-                  const Expanded(child: Divider(thickness: 1,)),
-                  SizedBox(width: 40,),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          elevation: 0,
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent
-                      ),
-                      onPressed: (){},
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset('assets/images/google_icon.png',
-                          height: 40,
-                          width: 40,
-                          fit: BoxFit.cover,),
-                      )
-                  ),
-                  SizedBox(width: 15,),
-                  ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          elevation: 0,
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent
-                      ),
-                      onPressed: (){},
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset('assets/images/apple_icon.jpg',
-                          height: 40,
-                          width: 40,
-                          fit: BoxFit.cover,),
-                      )
-                  )
-                ],
-              ),
-              RichText(
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Create Account',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 22)),
+                ),
+
+                const SizedBox(height: 20),
+                Row(
+                  children: const [
+                    Expanded(child: Divider(thickness: 1)),
+                    Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Text('or')),
+                    Expanded(child: Divider(thickness: 1)),
+                  ],
+                ),
+
+                const SizedBox(height: 15),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _socialButton('assets/images/google_icon.png'),
+                    const SizedBox(width: 15),
+                    _socialButton('assets/images/apple_icon.jpg'),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+                RichText(
                   text: TextSpan(
                     style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).textTheme.bodyMedium!.color,
-                    ),
-                    children:[
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.bodyMedium?.color),
+                    children: [
                       const TextSpan(text: 'Do You Have An Account?'),
                       TextSpan(
                         text: ' Sign In',
-                        style: const TextStyle(
-                          color: Colors.green
-                        ),
+                        style: const TextStyle(color: Colors.green),
                         recognizer: TapGestureRecognizer()
-                          ..onTap = (){
-                            Navigator.pushNamed(context, '/signin');
-                          }
-                      )
-                    ]
-                  )),
-
-            ],
+                          ..onTap = () => Navigator.pushNamed(context, '/signin'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        )
-        ))
+        ),
+      ),
     );
   }
 }

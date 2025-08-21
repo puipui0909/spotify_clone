@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:spotify_clone/Screens/artist_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -10,8 +11,7 @@ class HomeScreen extends StatelessWidget {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          automaticallyImplyLeading: false,
-          elevation: 0,
+
           title: Stack(
             children: [
               Align(
@@ -56,6 +56,19 @@ class HomeScreen extends StatelessWidget {
             ),
 
           ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+            backgroundColor: Colors.grey,
+            unselectedItemColor: Colors.grey[300],
+            selectedItemColor: Colors.white,
+            type: BottomNavigationBarType.fixed,
+            iconSize: 37,
+            //currentIndex: _selectedIndex,
+            items:const[
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+              BottomNavigationBarItem(icon: Icon(Icons.my_library_books), label: ''),
+              BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+            ]
         ),
       ),
     );
@@ -179,39 +192,47 @@ class ArtistTab extends StatelessWidget{
             itemCount: artists.length,
             itemBuilder: (context, index){
               final artist = artists[index].data() as Map<String, dynamic>;
+              final artistId = artists[index].id;
 
-              return Container(
-                width: 150,
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipOval(
-                      child: Image.network(
-                        artist['avatar'],
-                        width: 150,
-                        height: 150,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                          Container(
-                            width: 150,
-                            height: 150,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.account_circle),
-                          ),
-                      )
-                    ),
-                    SizedBox(height: 6,),
-                    Text(
-                      artist['name'] ?? "No Title",
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+              return InkWell(
+                onTap: (){
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => ArtistScreen(artistId: artistId)
+                  ));
+                },
+                child: Container(
+                  width: 150,
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipOval(
+                        child: Image.network(
+                          artist['avatar'],
+                          width: 150,
+                          height: 150,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                            Container(
+                              width: 150,
+                              height: 150,
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.account_circle),
+                            ),
+                        )
                       ),
-                    )
-                  ],
+                      SizedBox(height: 6,),
+                      Text(
+                        artist['name'] ?? "No Title",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      )
+                    ],
+                  ),
                 ),
               );
             }

@@ -1,15 +1,24 @@
 # spotify_clone
 
-clone ứng dụng spotify
+Music player simulating the Spotify app
 
-## Trạng thái dự án
+## 
+Project status
 
-Giao diện màn hình thư viện, <br>
-Giao diện get started khi lần đầu mở ứng dụng, thêm cài đặt giao diện sáng tôi nhưng chưa điều chỉnh được
+Implemented user authentication (sign up & login) with Firebase Authentication, and managed songs, albums, and artists data with Firestore.<br>
+Implemented music playback using just_audio.<br>
 
-## Ảnh giao diện hiện tại
+## UI/UX Showcase
 
-![Screenshot_20250728_202751.png](test/Screenshot_20250728_202751.png)
+![getstart.png](test/getstart.png)
+![choosetheme.png](test/choosetheme.png)
+![signinORregister.png](test/signinORregister.png)
+![register.png](test/register.png)
+![signin.png](test/signin.png)
+![homeNewsTab.png](test/homeNewsTab.png)
+![artistTab.png](test/artistTab.png)
+![artistProfile.png](test/artistProfile.png)
+![player.png](test/player.png)
 
 ## Hướng dẫn chạy app
 
@@ -20,10 +29,45 @@ bash
     flutter run
 
 ## Cấu trúc thư mục
-lib/ <br>
->main.dart <br>
->Screens/ <br>
-   >library.dart <br>
->theme/ <br>
-   >theme.dart<br>
-   >theme_notifier.dart<br>
+|   firebase_options.dart
+|   main.dart
+|   structure.txt
+|   
++---features
+|   \---search
+|           my_search_delegate.dart
+|           search_service.dart
+|           
++---models
+|       album.dart
+|       artist.dart
+|       song.dart
+|       
++---Screens
+|       artist_screen.dart
+|       choose_theme_screen.dart
+|       get_started_screen.dart
+|       home_screen.dart
+|       library.dart
+|       player_screen.dart
+|       register_or_signin.dart
+|       register_screen.dart
+|       signin_screen.dart
+|       
++---service
+|       player_service.dart
+|       
++---theme
+|       theme.dart
+|       theme_notifier.dart
+|       
+\---widgets
+    |   custom_appbar.dart
+    |   items.dart
+    |   
+    \---register_and_sigin
+            auth_redirect_text.dart
+            field_button.dart
+            or_divider.dart
+            social_login_button.dart
+            text_field.dart

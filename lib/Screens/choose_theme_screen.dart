@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:spotify_clone/Screens/register_or_signin.dart';
 import 'package:spotify_clone/theme/theme_notifier.dart';
 
 class chooseThemeScreen extends StatelessWidget{
@@ -57,8 +58,6 @@ class chooseThemeScreen extends StatelessWidget{
                                 Text('Dark Mode', style: TextStyle(fontSize: 13),)
                               ],
                             ),
-                           
-                                
                           ],
                         )
                       ],
@@ -68,7 +67,9 @@ class chooseThemeScreen extends StatelessWidget{
 
                   SizedBox(height: 50,),
                   TextButton(
-                    onPressed: (){},
+                    onPressed: (){
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterOrSign()));
+                    },
                     style: TextButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,

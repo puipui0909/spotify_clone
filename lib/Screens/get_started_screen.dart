@@ -30,7 +30,9 @@ class GetStartedScreen extends StatelessWidget{
                       ),
                       SizedBox(height: 20,),
                       TextButton(
-                          onPressed: (){},
+                          onPressed: (){
+                            Navigator.pushNamed(context, '/theme');
+                          },
                           style: TextButton.styleFrom(
                             backgroundColor: Colors.green,
                             foregroundColor: Colors.white,

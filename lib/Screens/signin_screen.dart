@@ -1,6 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'package:spotify_clone/widgets/custom_appbar.dart';
+import 'package:spotify_clone/widgets/register_and_sigin/field_button.dart';
+import 'package:spotify_clone/widgets/register_and_sigin/text_field.dart';
+
+import '../widgets/register_and_sigin/auth_redirect_text.dart';
+import '../widgets/register_and_sigin/or_divider.dart';
+import '../widgets/register_and_sigin/social_login_button.dart';
+
 class SignInScreen extends StatefulWidget {
   const SignInScreen ({super.key});
 
@@ -13,7 +21,7 @@ class _SignInScreenState extends State<SignInScreen>{
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  bool _isPasswordVisible = false;
+  bool _isPasswordVisible = true;
   bool _isLoading = false;
 
   void _togglePasswordVisibility(){
@@ -60,33 +68,9 @@ class _SignInScreenState extends State<SignInScreen>{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        elevation: 0,
-        title: Stack(
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: IconButton(
-                onPressed: (){
-
-                },
-                icon: Icon(Icons.arrow_back),),
-            ),
-            Align(
-              alignment: Alignment.center,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Image.asset(
-                  'assets/images/loading.png',
-                  height: 33,
-                  width: 108,
-                ),
-              ),
-            )
-          ],
-        ),
-      ),
+      appBar: CustomAppBar(onBack: (){
+        Navigator.pop(context);
+      }),
       body: Center(
         child: SingleChildScrollView(
           child: Column(
@@ -97,18 +81,31 @@ class _SignInScreenState extends State<SignInScreen>{
                     children: [
                       Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),),
                       SizedBox(height: 49,),
-                      Container(
-                          height: 80,
-                          width: 334,
-                          child: TextFormField(
-                              controller: _emailController,
-                              decoration: InputDecoration(
-                                  labelText: 'Enter Your Email',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(15),
-                                  ),
-                                contentPadding: EdgeInsets.symmetric(vertical: 25, horizontal: 16),
-                              ))),
+                      CustomTextField(
+                          label: 'Enter Your Email',
+                          controller: _emailController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Vui lòng nhập email';
+                          }
+                          if (!value.contains('@')) {
+                            return 'Email không hợp lệ';
+                          }
+                          return null; // hợp lệ
+                        },
+                      ),
+                      // Container(
+                      //     height: 80,
+                      //     width: 334,
+                      //     child: TextFormField(
+                      //         controller: _emailController,
+                      //         decoration: InputDecoration(
+                      //             labelText: 'Enter Your Email',
+                      //             border: OutlineInputBorder(
+                      //               borderRadius: BorderRadius.circular(15),
+                      //             ),
+                      //           contentPadding: EdgeInsets.symmetric(vertical: 25, horizontal: 16),
+                      //         ))),
                       SizedBox(height: 8,),
                       Container(
                           height: 80,
@@ -153,67 +150,12 @@ class _SignInScreenState extends State<SignInScreen>{
                         child: Text('Recovery Password', style: TextStyle(fontSize: 14),)),
                   ),
               ),
-              TextButton(
-                  onPressed: _isLoading ? null : _signIn,
-                  style: TextButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      minimumSize: Size(332, 80),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25)
-                      )
-                  ),
-                  child: Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),)),
-              Row(
-                children: <Widget>[
-                  SizedBox(width: 40,),
-                  const Expanded(
-                    child: Divider(thickness: 1),
-                  ),
-                  Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text('or',)),
-                  const Expanded(child: Divider(thickness: 1,)),
-                  SizedBox(width: 40,),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          elevation: 0,
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent
-                      ),
-                      onPressed: (){},
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset('assets/images/google_icon.png',
-                          height: 40,
-                          width: 40,
-                          fit: BoxFit.cover,),
-                      )
-                  ),
-                  SizedBox(width: 15,),
-                  ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          elevation: 0,
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent
-                      ),
-                      onPressed: (){},
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset('assets/images/apple_icon.jpg',
-                          height: 40,
-                          width: 40,
-                          fit: BoxFit.cover,),
-                      )
-                  )
-                ],
-              ),
-              Text('Do You Have An Account? Sign In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),)
+              FieldButton(type: 'sign in', action: _isLoading ? null : _signIn),
+              SizedBox(height: 15,),
+              OrDivider(),
+              SocialLoginButton(),
+              SizedBox(height: 15,),
+              AuthRedirectText(type: 'signin')
             ],
           ),
         ),

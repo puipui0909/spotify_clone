@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:spotify_clone/Screens/choose_theme_screen.dart';
 import 'package:spotify_clone/Screens/get_started_screen.dart';
 import 'theme/theme.dart';
 import 'theme/theme_notifier.dart';
@@ -30,11 +31,13 @@ class MyApp extends StatelessWidget{
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return MaterialApp(
-        initialRoute: '/signin',
+        initialRoute: '/getstarted',
         routes: {
           '/home': (context) => const HomeScreen(),
           '/signin': (context) => const SignInScreen(),
           '/register': (context) => const RegisterScreen(),
+          '/getstarted': (context) => const GetStartedScreen(),
+          '/theme': (context) => const chooseThemeScreen(),
         },
         debugShowCheckedModeBanner: false,
       title: 'Spotify',

@@ -10,7 +10,7 @@ class RegisterOrSign extends StatelessWidget{
             padding: EdgeInsets.all(8.0),
             child: IconButton(
                 onPressed: (){
-
+                  Navigator.pop(context);
                 },
                 icon: Icon(Icons.arrow_back),),
         ),
@@ -42,14 +42,18 @@ class RegisterOrSign extends StatelessWidget{
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
                     ),
-                    onPressed: (){},
+                    onPressed: (){
+                      Navigator.pushNamed(context, '/register');
+                    },
                     child: Text('Register', style: TextStyle(fontSize: 19),)),
                 SizedBox(width: 30,),
                 TextButton(
                     style: TextButton.styleFrom(
                         minimumSize: Size(147, 73)
                     ),
-                    onPressed: (){}, 
+                    onPressed: (){
+                      Navigator.pushNamed(context, '/signin');
+                    },
                     child: Text('Sign in', style: TextStyle(fontSize: 19),))
               ],
             )

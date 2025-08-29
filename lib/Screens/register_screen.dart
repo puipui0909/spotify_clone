@@ -3,6 +3,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../widgets/custom_appbar.dart';
+
+import '../widgets/register_and_sigin/auth_redirect_text.dart';
+
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
 
@@ -49,7 +53,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tạo tài khoản thành công ✅')),
+          const SnackBar(content: Text('Tạo tài khoản thành công')),
         );
         Navigator.pushReplacementNamed(context, '/home');
       }
@@ -123,20 +127,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => Navigator.pop(context),
-            ),
-            const Spacer(),
-            Image.asset('assets/images/loading.png', height: 33, width: 108),
-            const Spacer(flex: 2),
-          ],
-        ),
-      ),
+      appBar: CustomAppBar(onBack: (){
+        Navigator.pop(context);
+      },),
       body: Center(
         child: SingleChildScrollView(
           child: Form(
@@ -207,23 +200,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
 
                 const SizedBox(height: 20),
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).textTheme.bodyMedium?.color),
-                    children: [
-                      const TextSpan(text: 'Do You Have An Account?'),
-                      TextSpan(
-                        text: ' Sign In',
-                        style: const TextStyle(color: Colors.green),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () => Navigator.pushNamed(context, '/signin'),
-                      ),
-                    ],
-                  ),
-                ),
+                AuthRedirectText(type: 'register',),
               ],
             ),
           ),

@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:spotify_clone/Screens/artist_screen.dart';
+import 'package:spotify_clone/Screens/player_screen.dart';
+import 'package:spotify_clone/models/artist.dart';
+import 'package:spotify_clone/widgets/custom_appbar.dart';
+import 'package:spotify_clone/widgets/items.dart';
+import 'package:spotify_clone/models/song.dart';
+import 'package:spotify_clone/models/artist.dart';
+
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -10,31 +17,14 @@ class HomeScreen extends StatelessWidget {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        appBar: AppBar(
-
-          title: Stack(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  onPressed: (){
-
-                  },
-                  icon: Icon(Icons.search),),
-              ),
-              Align(
-                alignment: Alignment.center,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Image.asset(
-                    'assets/images/loading.png',
-                    height: 33,
-                    width: 108,
-                  ),
-                ),
-              )
-            ],
-          ),
+        appBar: CustomAppBar(
+          action: IconButton(
+              onPressed: (){
+                // showSearch(
+                //     context: context,
+                //     delegate: MySearchDelegate(),)
+              },
+              icon: Icon(Icons.search)),
         ),
         body: Column(
           children: [
@@ -58,7 +48,6 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
-            backgroundColor: Colors.grey,
             unselectedItemColor: Colors.grey[300],
             selectedItemColor: Colors.white,
             type: BottomNavigationBarType.fixed,
@@ -75,170 +64,57 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class NewsTab extends StatelessWidget{
+class NewsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-      return StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('songs').snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('songs')
+          .orderBy('createAt', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          if (snapshot.hasError) {
-            return const Center(child: Text("Lỗi khi tải dữ liệu"));
-          }
+        final songs =
+        snapshot.data!.docs.map((doc) => Song.fromDoc(doc)).toList();
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("Không có bài hát nào"));
-          }
-
-          final songs = snapshot.data!.docs;
-          // tạo list nằm ngang
-          return SizedBox(
-            height: 242,
-            child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: songs.length,
-                itemBuilder: (context, index){
-                  final song = songs[index].data() as Map<String, dynamic>;
-
-                  return Container(
-                    width: 147,
-                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        //CoverUrl
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            song['coverUrl'] ?? "",
-                            width: 147,
-                            height: 193,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                                width: 147,
-                                height: 193,
-                                color: Colors.purple[300],
-                                child: const Icon(Icons.music_note, size: 50),
-                              ),
-                          ),
-                        ),
-                        const SizedBox(height: 3,),
-                        Text(
-                          song['title'] ?? 'No Title',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        FutureBuilder<DocumentSnapshot>(
-                          future: FirebaseFirestore.instance.collection('artist').doc(song['artistId']).get(),
-                          builder: (context,artistSnapshot){
-                            if(artistSnapshot.connectionState == ConnectionState.waiting){
-                              return const Text('Đang tải...');
-                            }
-                            if(!artistSnapshot.hasData || !artistSnapshot.data!.exists){
-                              return const Text('Unknow Artist');
-                            }
-                            final artistData = artistSnapshot.data!.data()
-                              as Map<String, dynamic>;
-                            return Text(
-                              artistData['name'] ?? "Unknow Artist",
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 12,
-                              )
-                            );
-                          }
-                        ),
-                      ],
-                    ),
-                  );
-                }
-            ),
-          );
-        },
-      );
+        return SizedBox(
+          height: 242,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: songs.length,
+            itemBuilder: (context, index) =>
+                MediaItem.song(song: songs[index]), // 🔹 Dùng chung
+          ),
+        );
+      },
+    );
   }
 }
 
+
 class ArtistTab extends StatelessWidget{
+  //
   @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
+  Widget build(BuildContext context){
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance.collection('artist').snapshots(),
       builder: (context, snapshot){
-        if(snapshot.connectionState == ConnectionState.waiting){
-          return const Center(child: CircularProgressIndicator(),);
+        if(!snapshot.hasData){
+          return const Center(child: CircularProgressIndicator());
         }
-        if (snapshot.hasError) {
-          return const Center(child: Text('Lỗi khi tải dữ liệu'),);
-        }
-        if(!snapshot.hasData || snapshot.data!.docs.isEmpty){
-          return const Center(child: Text('Không có artist nào'));
-        }
-        final artists = snapshot.data!.docs;
-
+        final artists = snapshot.data!.docs.map((doc) => Artist.fromDoc(doc)).toList();
         return SizedBox(
-          height: 150,
+          height: 200,
           child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: artists.length,
-            itemBuilder: (context, index){
-              final artist = artists[index].data() as Map<String, dynamic>;
-              final artistId = artists[index].id;
-
-              return InkWell(
-                onTap: (){
-                  Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => ArtistScreen(artistId: artistId)
-                  ));
-                },
-                child: Container(
-                  width: 150,
-                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipOval(
-                        child: Image.network(
-                          artist['avatar'],
-                          width: 150,
-                          height: 150,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                            Container(
-                              width: 150,
-                              height: 150,
-                              color: Colors.grey[300],
-                              child: const Icon(Icons.account_circle),
-                            ),
-                        )
-                      ),
-                      SizedBox(height: 6,),
-                      Text(
-                        artist['name'] ?? "No Title",
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              );
-            }
-          )
+              scrollDirection: Axis.horizontal,
+              itemCount: artists.length,
+              itemBuilder: (context, index) => MediaItem.artist(artist: artists[index],)
+          ),
         );
-      }
+      },
     );
   }
 }

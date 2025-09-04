@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:spotify_clone/models/artist.dart';
-import '../models/song.dart';
-import '../Screens/player_screen.dart';
-import '../Screens/artist_screen.dart';
+import '../../models/song.dart';
+import '../../Screens/player_screen.dart';
+import '../../Screens/artist_screen.dart';
 
 enum MediaType { song, artist }
 
@@ -49,12 +49,7 @@ class MediaItem extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => PlayerScreen(
-              title: songData.title,
-              artistId: songData.artistId,
-              coverUrl: songData.coverUrl ?? '',
-              audioUrl: songData.audioUrl ?? '',
-            ),
+            builder: (_) => PlayerScreen(song: songData,),
           ),
         );
       },

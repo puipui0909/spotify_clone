@@ -4,7 +4,7 @@ import 'package:spotify_clone/Screens/artist_screen.dart';
 import 'package:spotify_clone/Screens/player_screen.dart';
 import 'package:spotify_clone/models/artist.dart';
 import 'package:spotify_clone/widgets/custom_appbar.dart';
-import 'package:spotify_clone/widgets/items.dart';
+import 'package:spotify_clone/widgets/home_tabs/items.dart';
 import 'package:spotify_clone/models/song.dart';
 import 'package:spotify_clone/models/artist.dart';
 
@@ -129,7 +129,7 @@ class PodcastTab extends StatelessWidget{
           return const Center(child: CircularProgressIndicator(),);
         }
         if (snapshot.hasError){
-          return const Center(child: Text('Lỗi khi tải dữ liệu'),);
+          return Center(child: Text('Lỗi: ${snapshot.error}'));
         }
         if(!snapshot.hasData || snapshot.data!.docs.isEmpty){
           return const Center (child:  Text('không có nội dung nào'),);
@@ -142,7 +142,7 @@ class PodcastTab extends StatelessWidget{
               scrollDirection: Axis.horizontal,
               itemCount: podcasts.length,
               itemBuilder: (context, index){
-                final podcast = podcasts[index].data() as Map<String, dynamic>;
+                final podcast = podcasts[index].data() as Map<String, dynamic>? ?? {};
 
                 return Container(
                   width: 220,

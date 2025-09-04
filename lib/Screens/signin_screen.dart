@@ -94,42 +94,18 @@ class _SignInScreenState extends State<SignInScreen>{
                           return null; // hợp lệ
                         },
                       ),
-                      // Container(
-                      //     height: 80,
-                      //     width: 334,
-                      //     child: TextFormField(
-                      //         controller: _emailController,
-                      //         decoration: InputDecoration(
-                      //             labelText: 'Enter Your Email',
-                      //             border: OutlineInputBorder(
-                      //               borderRadius: BorderRadius.circular(15),
-                      //             ),
-                      //           contentPadding: EdgeInsets.symmetric(vertical: 25, horizontal: 16),
-                      //         ))),
                       SizedBox(height: 8,),
-                      Container(
-                          height: 80,
-                          width: 334,
-                          child: TextFormField(
-                              controller: _passwordController,
-                              obscureText: _isPasswordVisible,
-                              decoration: InputDecoration(
-                                  labelText: 'Password',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(15),
-                                  ),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                                    ),
-                                    onPressed: (){
-                                      setState(() {
-                                        _isPasswordVisible = !_isPasswordVisible;
-                                      });
-                                    },
-                                  ),
-                                contentPadding: EdgeInsets.symmetric(vertical: 25, horizontal: 16),
-                              ))),
+                      CustomTextField(
+                          label: 'Password',
+                          controller: _passwordController,
+                          isPassword: true,
+                          validator: (value){
+                            if(value == null || value.isEmpty)
+                              return 'Mật khẩu không được để trống';
+                            if(value.length < 6)
+                              return 'Mật khẩu phải dài hơn 6 kí tự';
+                            return null;
+                          }),
                     ],
                   ),
               ),

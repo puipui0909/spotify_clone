@@ -3,18 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:rxdart/rxdart.dart' as rxdart;
 
+import '../models/artist.dart';
+import '../models/song.dart';
+
 class PlayerScreen extends StatefulWidget {
-  final String title;
-  final String artistId;
-  final String coverUrl;
-  final String audioUrl;
+  final Song song;
 
   const PlayerScreen({
     super.key,
-    required this.title,
-    required this.artistId,
-    required this.coverUrl,
-    required this.audioUrl,
+    required this.song
   });
 
   @override
@@ -28,7 +25,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   void initState() {
     super.initState();
     _player = AudioPlayer();
-    _player.setUrl(widget.audioUrl); // phát nhạc từ Firestore
+    _player.setUrl(widget.song.audioUrl!); // phát nhạc từ Firestore
   }
 
   @override
@@ -46,14 +43,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
             (position, buffered, duration) =>
             PositionData(position, buffered, duration ?? Duration.zero),
       );
-  /// Lấy artist name 
-  Future<String> _fetchArtistName(String artistId) async{
+  /// Lấy artist object
+  Future<Artist?> _fetchArtist(String artistId) async{
     final doc = 
         await FirebaseFirestore.instance.collection('artist').doc(artistId).get();
     if (doc.exists) {
-      return doc['name'] ?? 'Unknown Artist';
+      return Artist.fromDoc(doc);
     }
-    return 'Unknown Artist';
+    return null;
   }
 
   @override
@@ -76,7 +73,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: Image.network(
-                widget.coverUrl,
+                widget.song.coverUrl!,
                 height: 300,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -84,18 +81,30 @@ class _PlayerScreenState extends State<PlayerScreen> {
             ),
             const SizedBox(height: 24),
 
-            /// Tên bài hát + nghệ sĩ
+            /// Tên bài hát
             Text(
-              widget.title,
+              widget.song.title,
               style: const TextStyle(
                   fontSize: 22, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            Text(
-              widget.artistId,
-              style: const TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
+            /// Tên nghệ sĩ
+            FutureBuilder<Artist?>(
+              future: _fetchArtist(widget.song.artistId!),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Text("Loading artist...");
+                }
+                if (snapshot.hasError || snapshot.data == null) {
+                  return const Text("Unknown Artist");
+                }
+                return Text(
+                  snapshot.data!.name,
+                  style: const TextStyle(fontSize: 16),
+                  textAlign: TextAlign.center,
+                );
+              },
             ),
             const SizedBox(height: 32),
 

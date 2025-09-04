@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:spotify_clone/Screens/album_screen.dart';
+import 'package:spotify_clone/Screens/player_screen.dart';
+import 'package:spotify_clone/models/album.dart';
+import 'package:spotify_clone/widgets/cover_appbar.dart';
+import 'package:spotify_clone/widgets/list.dart';
+
+import '../models/artist.dart';
+import '../models/song.dart';
 
 class ArtistScreen extends StatelessWidget {
   final String artistId;
@@ -7,7 +15,7 @@ class ArtistScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<DocumentSnapshot>(
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance
           .collection('artist')
           .doc(artistId)
@@ -24,77 +32,12 @@ class ArtistScreen extends StatelessWidget {
           );
         }
 
-        final artist = snapshot.data!.data() as Map<String, dynamic>;
+        final artist = Artist.fromDoc(snapshot.data!);
 
         return Scaffold(
           body: CustomScrollView(
             slivers: [
-              SliverAppBar(
-                expandedHeight: 300,
-                pinned: true,
-                flexibleSpace: LayoutBuilder(
-                  builder: (context, constraints) {
-                    var top = constraints.biggest.height;
-                    return FlexibleSpaceBar(
-                      title: top <= kToolbarHeight + 50
-                          ? Text(
-                        artist['name'] ?? "No name",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                          : null,
-                      background: Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              bottomLeft: Radius.circular(24),
-                              bottomRight: Radius.circular(24),
-                            ),
-                            child: Image.network(
-                              artist['avatar'] ?? "",
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                    color: Colors.grey[300],
-                                    child: const Icon(
-                                      Icons.account_circle,
-                                      size: 120,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                            ),
-                          ),
-                          if (top > kToolbarHeight + 50)
-                            Positioned(
-                              left: 16,
-                              bottom: 16,
-                              child: Text(
-                                artist['name'] ?? "No name",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 37,
-                                  fontWeight: FontWeight.bold,
-                                  shadows: [
-                                    Shadow(
-                                      blurRadius: 8,
-                                      color: Colors.black54,
-                                      offset: Offset(2, 2),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-
+              CoverAppbar(item: artist),
               // Nội dung bên dưới
               SliverToBoxAdapter(
                 child: Padding(
@@ -110,51 +53,32 @@ class ArtistScreen extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                        StreamBuilder<QuerySnapshot>(
+                        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                           stream: FirebaseFirestore.instance.collection('songs').where('artistId', isEqualTo: artistId).snapshots(),
-                          builder: (context, songSnapShot){
-                            if(songSnapShot.connectionState == ConnectionState.waiting){
-                              return const Center(child: CircularProgressIndicator(),);
+                          builder: (context, songSnapShot) {
+                            if (songSnapShot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                child: CircularProgressIndicator(),);
                             }
-                            if(!songSnapShot.hasData || songSnapShot.data!.docs.isEmpty){
+                            if (!songSnapShot.hasData ||
+                                songSnapShot.data!.docs.isEmpty) {
                               return const Text('Chưa có bài hát nào');
                             }
-                            final songs = songSnapShot.data!.docs;
+                            final songs = songSnapShot.data!.docs.map((doc) =>
+                                Song.fromDoc(doc)).toList();
 
-                            return ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: NeverScrollableScrollPhysics(),
-                                  padding: EdgeInsets.zero,
-                                  itemCount: songs.length,
-                                  itemBuilder: (context, index){
-                                    final song = songs[index].data() as Map<String, dynamic>;
-                                    return ListTile(
-                                        contentPadding: EdgeInsets.zero,
-                                        leading: ClipRRect(
-                                          borderRadius: BorderRadius.circular(8),
-                                          child: Image.network(
-                                            song['coverUrl'] ?? '',
-                                            width: 50,
-                                            height: 50,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stackTrace) =>
-                                                Container(
-                                                  width: 50,
-                                                  height: 50,
-                                                  color: Colors.grey[300],
-                                                  child: const Icon(Icons.music_note),
-                                                ),
-                                          ),
-                                        ),
-                                        title: Text(song['title'] ?? 'No title', style: TextStyle(fontWeight: FontWeight.bold),),
-                                        onTap: (){
-                                          //TODO: open player
-                                        },
-                                    );
-                                  }
+                            return ListWidget(
+                              items: songs,
+                              getTitle: (song) => song.title,
+                              getCoverUrl: (song) => song.coverUrl,
+                              onTap: (context, song) {
+                                Navigator.push(context, MaterialPageRoute(
+                                    builder: (_) => PlayerScreen(song: song)),);
+                              },
                             );
-                          },
-                        ),
+                          }
+                        )
                     ],
                   ),
                 ),
@@ -173,48 +97,24 @@ class ArtistScreen extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      StreamBuilder<QuerySnapshot>(
+                      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                         stream: FirebaseFirestore.instance.collection('album').where('artistId', isEqualTo: artistId).snapshots(),
-                        builder: (context, songSnapShot){
-                          if(songSnapShot.connectionState == ConnectionState.waiting){
+                        builder: (context, albumSnapShot){
+                          if(albumSnapShot.connectionState == ConnectionState.waiting){
                             return const Center(child: CircularProgressIndicator(),);
                           }
-                          if(!songSnapShot.hasData || songSnapShot.data!.docs.isEmpty){
+                          if(!albumSnapShot.hasData || albumSnapShot.data!.docs.isEmpty){
                             return const Text('Chưa có album nào');
                           }
-                          final songs = songSnapShot.data!.docs;
-
-                          return ListView.builder(
-                              shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
-                              padding: EdgeInsets.zero,
-                              itemCount: songs.length,
-                              itemBuilder: (context, index){
-                                final song = songs[index].data() as Map<String, dynamic>;
-                                return ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  leading: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      song['coverUrl'] ?? '',
-                                      width: 50,
-                                      height: 50,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          Container(
-                                            width: 50,
-                                            height: 50,
-                                            color: Colors.grey[300],
-                                            child: const Icon(Icons.music_note),
-                                          ),
-                                    ),
-                                  ),
-                                  title: Text(song['title'] ?? 'No title', style: TextStyle(fontWeight: FontWeight.bold),),
-                                  onTap: (){
-                                    //TODO: open player
-                                  },
-                                );
-                              }
+                          final albums = albumSnapShot.data!.docs.map((doc) => Album.fromDoc(doc)).toList();
+                          return ListWidget(
+                              items: albums,
+                              getTitle: (album) => album.title,
+                              getCoverUrl: (album) => album.coverUrl,
+                              onTap: (context, album) {
+                                Navigator.push(context, MaterialPageRoute(
+                                    builder: (_) => AlbumScreen(albumId: album.id)));
+                              },
                           );
                         },
                       ),

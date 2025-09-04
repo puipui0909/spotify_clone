@@ -6,6 +6,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../widgets/custom_appbar.dart';
 
 import '../widgets/register_and_sigin/auth_redirect_text.dart';
+import '../widgets/register_and_sigin/field_button.dart';
+import '../widgets/register_and_sigin/or_divider.dart';
+import '../widgets/register_and_sigin/social_login_button.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -161,44 +164,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   validator: (v) => _validate(v, 'password'),
                 ),
                 const SizedBox(height: 20),
-
-                TextButton(
-                  onPressed: _isLoading ? null : _createAccount,
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(332, 60),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25)),
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Create Account',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 22)),
-                ),
-
+                FieldButton(type: 'createAccount', action: _isLoading ? null : _createAccount),
                 const SizedBox(height: 20),
-                Row(
-                  children: const [
-                    Expanded(child: Divider(thickness: 1)),
-                    Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Text('or')),
-                    Expanded(child: Divider(thickness: 1)),
-                  ],
-                ),
-
+                OrDivider(),
                 const SizedBox(height: 15),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _socialButton('assets/images/google_icon.png'),
-                    const SizedBox(width: 15),
-                    _socialButton('assets/images/apple_icon.jpg'),
-                  ],
-                ),
-
+                SocialLoginButton(),
                 const SizedBox(height: 20),
                 AuthRedirectText(type: 'register',),
               ],

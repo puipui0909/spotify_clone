@@ -20,8 +20,8 @@ class Song {
   });
 
   // Tạo object từ Firestore document
-  factory Song.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data()!;
+  factory Song.fromDoc(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
     return Song(
       id: doc.id,
       title: data['title'] ?? '',

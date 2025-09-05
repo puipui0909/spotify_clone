@@ -8,6 +8,8 @@ import 'package:spotify_clone/widgets/home_tabs/items.dart';
 import 'package:spotify_clone/models/song.dart';
 import 'package:spotify_clone/models/artist.dart';
 
+import '../features/search/my_search_delegate.dart';
+
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -20,9 +22,10 @@ class HomeScreen extends StatelessWidget {
         appBar: CustomAppBar(
           action: IconButton(
               onPressed: (){
-                // showSearch(
-                //     context: context,
-                //     delegate: MySearchDelegate(),)
+                showSearch(
+                      context: context,
+                      delegate: MySearchDelegate(),
+                );
               },
               icon: Icon(Icons.search)),
         ),
